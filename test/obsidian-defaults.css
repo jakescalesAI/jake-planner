@@ -1,0 +1,8 @@
+/* The Obsidian defaults most likely to fight the plugin, so the harness shows those fights. */
+body { margin: 0; height: 100vh; background: #888; }
+#pane { height: 100vh; padding: 16px; overflow: auto; }
+button:not(.clickable-icon) { background: #444; color: #fff; padding: 4px 12px; height: 30px; border: 1px solid #777; border-radius: 4px; box-shadow: 0 1px 2px #000; font-size: 13px; font-weight: 500; }
+button:not(.clickable-icon):hover { background: #666; box-shadow: 0 1px 4px #000; }
+input[type="text"], input[type="date"] { background: #333; border: 1px solid #777; color: #eee; font-size: 16px; height: 30px; padding: 4px 8px; border-radius: 4px; }
+input[type="text"]:focus, input[type="text"]:active, input[type="text"]:focus-visible { box-shadow: 0 0 0 2px #88f; }
+#result { display: none; }
