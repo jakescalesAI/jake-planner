@@ -32,3 +32,9 @@ node test/core.test.cjs /root/obsidian-vault
 the notes; open it with `?run=1` to run `test/checks.js`, whose results land in `#result`. The copy holds private
 notes, so keep the out dir outside this repo. Obsidian's API is stubbed there, so a change to how the
 plugin talks to Obsidian still needs a look in the real app.
+
+## Release
+
+Bump `version` in `manifest.json` and add the same key to `versions.json` (`"x.y.z": "<minAppVersion>"`),
+run the tests, then package and tag per AgentHub `skills/obsidian-plugin-release/SKILL.md`. Packages
+land in `/root/backups/plugins/jake-planner-<version>/`. Tags stay local: pushing one is publishing.
