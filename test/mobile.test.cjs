@@ -61,6 +61,20 @@ const tests = [
     assert.strictEqual(plugin.store.tasks.map((t) => t.title).sort().join(), "One,Three");
     for (const kind of ["modify", "create", "delete", "rename", "resolved"]) assert.ok(p.events.includes(kind), `no ${kind} listener, so it would never update`);
   }],
+  ["a task in 10 Money is never read or listed", async () => {
+    const money = "10 Money/Bank/statement.md";
+    const p = phone({ "a.md": "- [ ] One\n", [money]: "- [ ] Pay the bank\n" });
+    const reads = [];
+    const read = p.app.vault.cachedRead;
+    p.app.vault.cachedRead = (f) => { reads.push(f.path); return read(f); };
+    const plugin = new p.Plugin();
+    await plugin.onload();
+    await p.app.workspace.ready;
+    plugin.store.changed(p.app.vault.getAbstractFileByPath(money));
+    await new Promise((r) => setTimeout(r, 250));
+    assert.ok(!reads.includes(money), "the note was read");
+    assert.strictEqual(plugin.store.tasks.map((t) => t.title).join(), "One");
+  }],
   ["a calendar note that can't be read doesn't stop it either", async () => {
     const cal = "0 Home/3 Schedule/Calendar.md";
     const p = phone({ "a.md": "- [ ] One\n", [cal]: "x" }, [cal]);

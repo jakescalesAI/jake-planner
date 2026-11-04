@@ -128,7 +128,7 @@ test("an at-risk task says so", () => {
   assert.ok(!core.taskCaption(fine, now).includes("At risk"));
 });
 test("the same folders are left out as on Home", () => {
-  for (const p of ["0 Home/5 AgentHub/9 Raw copy (read-only)/x.md", "1 AgentHub/x.md", "7 Scraper/x.md", "0 Home/4 Templates/t.md", "0 Home/0 Quartzi Copilot/c.md", "0 Home/2 Tasks/README.md", "a.png"]) assert.ok(!core.inScope(p), p);
+  for (const p of ["0 Home/5 AgentHub/9 Raw copy (read-only)/x.md", "1 AgentHub/x.md", "7 Scraper/x.md", "10 Money/Bank/x.md", "0 Home/4 Templates/t.md", "0 Home/0 Quartzi Copilot/c.md", "0 Home/2 Tasks/README.md", "a.png"]) assert.ok(!core.inScope(p), p);
   for (const p of ["0 Home/2 Tasks/Inbox.md", "2 Thoughts/n.md", "CLAUDE.md"]) assert.ok(core.inScope(p), p);
 });
 
