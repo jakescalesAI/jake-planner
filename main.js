@@ -12,7 +12,7 @@ const INBOX_NOTE = "0 Home/2 Tasks/Inbox.md";
 const EMAIL_NOTE = "0 Home/2 Tasks/Email.md";
 const CALENDAR_DAYS = 14;
 // Same exclusions as the task queries on Home and the rule in the vault's CLAUDE.md.
-const EXCLUDED = ["0 Home/5 AgentHub/", "1 AgentHub/", "7 Scraper/", "10 Money/", "0 Home/0 Quartzi Copilot/", "0 Home/4 Templates/", "0 Home/2 Tasks/README.md"];
+const EXCLUDED = ["0 Home/5 AgentHub/", "1 AgentHub/", "7 Scraper/", "0 Home/0 Quartzi Copilot/", "0 Home/4 Templates/", "0 Home/2 Tasks/README.md"];
 const LANES = ["Work", "Health", "Videos", "Writing", "School", "Campus Citizen"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -244,7 +244,9 @@ function taskCaption(task, now) {
 }
 
 /* ---------- the live index of the vault ---------- */
-const inScope = (path) => path.endsWith(".md") && !EXCLUDED.some((p) => path.startsWith(p));
+// The same rule as Quartzi Copilot: a folder of that name, in any case, at any depth.
+const isPrivate = (path) => path.split("/").some((p) => p.trim().toLowerCase() === "10 money");
+const inScope = (path) => path.endsWith(".md") && !isPrivate(path) && !EXCLUDED.some((p) => path.startsWith(p));
 
 class Store {
   constructor(app) {
@@ -289,7 +291,10 @@ class Store {
   }
 
   async readFile(file) {
+    // A note can move out of scope between being queued and being read, or during the read.
+    if (!inScope(file.path)) return this.forget(file.path);
     const text = await this.app.vault.cachedRead(file);
+    if (!inScope(file.path)) return this.forget(file.path);
     if (file.path === CALENDAR_NOTE) {
       this.calendar = parseCalendar(text, new Date());
       this.calendarTime = file.stat ? file.stat.mtime : 0;
@@ -322,6 +327,8 @@ class Store {
   }
 
   removed(path) {
+    clearTimeout(this.timers.get(path));
+    this.timers.delete(path);
     this.forget(path);
     this.emit();
   }

@@ -75,6 +75,77 @@ const tests = [
     assert.ok(!reads.includes(money), "the note was read");
     assert.strictEqual(plugin.store.tasks.map((t) => t.title).join(), "One");
   }],
+  ["10 Money is private at any depth and in any case", async () => {
+    const hidden = ["10 Money/a.md", "10 money/a.md", "10 MONEY/x/a.md", "0 Home/10 Money/a.md", "2 Thoughts/deep/10 money/b/a.md", "0 Home/ 10 Money /a.md"];
+    const notes = { "a.md": "- [ ] One\n", "10 Moneyish/a.md": "- [ ] Two\n", "x10 Money/a.md": "- [ ] Three\n" };
+    for (const h of hidden) notes[h] = "- [ ] Private\n";
+    const p = phone(notes);
+    const reads = [];
+    const read = p.app.vault.cachedRead;
+    p.app.vault.cachedRead = (f) => { reads.push(f.path); return read(f); };
+    const plugin = new p.Plugin();
+    await plugin.onload();
+    await p.app.workspace.ready;
+    assert.deepStrictEqual(reads.filter((r) => hidden.includes(r)), []);
+    assert.strictEqual(plugin.store.tasks.map((t) => t.title).sort().join(), "One,Three,Two");
+    plugin.store.changed(p.app.vault.getAbstractFileByPath("0 Home/10 Money/a.md"));
+    await new Promise((r) => setTimeout(r, 250));
+    assert.deepStrictEqual(reads.filter((r) => hidden.includes(r)), []);
+  }],
+  ["a note moved into 10 Money within the debounce isn't read", async () => {
+    const p = phone({ "a.md": "- [ ] One\n", "b.md": "- [ ] Moved\n" });
+    const reads = [];
+    const read = p.app.vault.cachedRead;
+    p.app.vault.cachedRead = (f) => { reads.push(f.path); return read(f); };
+    const plugin = new p.Plugin();
+    await plugin.onload();
+    await p.app.workspace.ready;
+    reads.length = 0;
+    const file = p.app.vault.getAbstractFileByPath("b.md");
+    plugin.store.changed(file);
+    file.path = "10 Money/b.md";  // Obsidian moves the same TFile, so the queued re-read sees the new path
+    await new Promise((r) => setTimeout(r, 250));
+    assert.deepStrictEqual(reads, []);
+    assert.strictEqual(plugin.store.byPath.has("10 Money/b.md"), false);
+  }],
+  ["the queued re-read is cancelled when the note goes", async () => {
+    const p = phone({ "a.md": "- [ ] One\n", "b.md": "- [ ] Gone\n" });
+    const plugin = new p.Plugin();
+    await plugin.onload();
+    await p.app.workspace.ready;
+    plugin.store.changed(p.app.vault.getAbstractFileByPath("b.md"));
+    assert.strictEqual(plugin.store.timers.size, 1);
+    plugin.store.removed("b.md");
+    assert.strictEqual(plugin.store.timers.size, 0);
+    await new Promise((r) => setTimeout(r, 250));
+    assert.strictEqual(plugin.store.tasks.map((t) => t.title).join(), "One");
+  }],
+  ["a note moved into 10 Money during the read is dropped", async () => {
+    const p = phone({ "a.md": "- [ ] One\n", "b.md": "- [ ] Moved\n" });
+    const plugin = new p.Plugin();
+    await plugin.onload();
+    await p.app.workspace.ready;
+    const file = p.app.vault.getAbstractFileByPath("b.md");
+    const read = p.app.vault.cachedRead;
+    p.app.vault.cachedRead = async (f) => { const text = await read(f); f.path = "10 Money/b.md"; return text; };
+    await plugin.store.readFile(file);
+    assert.strictEqual(plugin.store.byPath.has("10 Money/b.md"), false);
+  }],
+  ["the move itself drops the note's tasks", async () => {
+    const p = phone({ "a.md": "- [ ] One\n", "b.md": "- [ ] Moved\n" });
+    const handlers = {};
+    p.app.vault.on = (kind, fn) => { handlers[kind] = fn; return {}; };
+    const plugin = new p.Plugin();
+    await plugin.onload();
+    await p.app.workspace.ready;
+    const file = p.app.vault.getAbstractFileByPath("b.md");
+    handlers.modify(file);
+    file.path = "0 Home/10 Money/b.md";
+    handlers.rename(file, "b.md");
+    await new Promise((r) => setTimeout(r, 250));
+    assert.strictEqual(plugin.store.tasks.map((t) => t.title).join(), "One");
+    assert.strictEqual(plugin.store.timers.size, 0);
+  }],
   ["a calendar note that can't be read doesn't stop it either", async () => {
     const cal = "0 Home/3 Schedule/Calendar.md";
     const p = phone({ "a.md": "- [ ] One\n", [cal]: "x" }, [cal]);
