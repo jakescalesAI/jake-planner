@@ -136,7 +136,7 @@ const vault = process.argv[2];
 if (vault) {
   const walk = (dir, rel = "") => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const r = rel ? `${rel}/${e.name}` : e.name;
-    if (e.name === ".obsidian" || e.name === ".trash" || e.name === ".git") return [];
+    if (e.name === ".obsidian" || e.name === ".trash" || e.name === ".git" || r === "10 Money") return [];
     return e.isDirectory() ? walk(path.join(dir, e.name), r) : [r];
   });
   const files = walk(vault).filter(core.inScope);

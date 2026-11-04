@@ -26,12 +26,17 @@ other devices.
 ```bash
 node --check main.js
 node test/core.test.cjs /root/obsidian-vault
+node test/mobile.test.cjs
 ```
+
+`test/mobile.test.cjs` loads the plugin the way a phone does: no Node, only `obsidian` to require, and a
+vault with a note that can't be read. The tests skip `10 Money`.
 
 `test/harness.cjs <vault> <out dir>` writes a page that runs the real plugin in a browser on a copy of
 the notes; open it with `?run=1` to run `test/checks.js`, whose results land in `#result`. The copy holds private
 notes, so keep the out dir outside this repo. Obsidian's API is stubbed there, so a change to how the
-plugin talks to Obsidian still needs a look in the real app.
+plugin talks to Obsidian still needs a look in the real app. `test/phone.cjs <out dir>` runs those checks at
+390px in headless Chromium, with a real exit code.
 
 ## Release
 

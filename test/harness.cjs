@@ -7,7 +7,7 @@ const [vault, out] = process.argv.slice(2);
 const root = path.join(__dirname, "..");
 const walk = (dir, rel = "") => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
   const r = rel ? `${rel}/${e.name}` : e.name;
-  if (e.name.startsWith(".")) return [];
+  if (e.name.startsWith(".") || r === "10 Money") return [];
   return e.isDirectory() ? walk(path.join(dir, e.name), r) : r.endsWith(".md") ? [r] : [];
 });
 const notes = {};

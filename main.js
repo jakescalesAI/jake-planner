@@ -279,9 +279,11 @@ class Store {
       return !cache || (cache.listItems || []).some((li) => li.task !== undefined) || f.path === EMAIL_NOTE;
     });
     this.byPath.clear();
-    await Promise.all(worthReading.map((f) => this.readFile(f)));
+    // A note can vanish between the listing and the read while a sync lands; the rest still load.
+    const read = (f) => this.readFile(f).catch((e) => console.error("Planner: could not read", f.path, e));
+    await Promise.all(worthReading.map(read));
     const cal = this.app.vault.getAbstractFileByPath(CALENDAR_NOTE);
-    if (cal instanceof TFile) await this.readFile(cal);
+    if (cal instanceof TFile) await read(cal);
     this.ready = true;
     this.emit();
   }

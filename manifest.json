@@ -1,7 +1,7 @@
 {
   "id": "jake-planner",
   "name": "Planner",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minAppVersion": "1.5.0",
   "description": "Your calendar and tasks in one view, read live from the notes in your vault.",
   "author": "Jake",
